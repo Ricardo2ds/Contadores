@@ -6,10 +6,12 @@
 <title>Gym casero</title>
 <link rel="stylesheet" href="../globals.css">
 <style>
-  body { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow-x:hidden; }
+  body { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow-x:hidden; gap:2rem; padding:2rem; }
   .wrap { position:relative; z-index:1; text-align:center; display:flex; flex-direction:column; align-items:center; gap:1rem; }
   .title { font-family:var(--display); font-size:2.2rem; font-weight:800; letter-spacing:-0.02em; }
   .badge { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; padding:5px 14px; border:1px solid var(--border); color:var(--txt2); border-radius:var(--radius); margin-top:0.5rem; }
+  .video-wrap { position:relative; z-index:1; width:100%; max-width:720px; aspect-ratio:16/9; border:1px solid var(--border); border-radius:4px; overflow:hidden; box-shadow:0 0 40px rgba(168,85,247,0.25); }
+  .video-wrap iframe { width:100%; height:100%; border:none; }
 </style>
 </head>
 <body class="grid-bg">
@@ -19,6 +21,13 @@
   <h1 class="title">Gym casero</h1>
   <div class="badge">en construcción</div>
   <a href="../main/index.html" class="btn-back">← volver al inicio</a>
+</div>
+<div class="video-wrap">
+  <iframe
+    src="https://www.youtube.com/embed/KIYMXR2FlSg?autoplay=1&mute=1&loop=1&playlist=KIYMXR2FlSg&controls=1"
+    allow="autoplay; encrypted-media"
+    allowfullscreen>
+  </iframe>
 </div>
 </body>
 </html>
