@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ricardo Dodds</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #07050f;
+    --bg2: #0e0a1a;
+    --bg3: #160f2a;
+    --purple: #a855f7;
+    --purple-dim: #7c3aed;
+    --purple-dark: #4c1d95;
+    --purple-glow: rgba(168,85,247,0.15);
+    --purple-border: rgba(168,85,247,0.25);
+    --txt: #ede8ff;
+    --txt2: #9d8fc4;
+    --mono: 'Space Mono', monospace;
+    --display: 'Syne', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--mono);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(168,85,247,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168,85,247,0.04) 1px, transparent 1px);
+    background-size: 44px 44px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* glow orb */
+  .orb {
+    position: fixed;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ---- MAIN CONTAINER ---- */
+  .container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  /* ---- HEADER ---- */
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 3px; height: 1.1em;
+    background: var(--purple);
+    margin-left: 3px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+
+  .name {
+    font-family: var(--display);
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--txt);
+  }
+
+  .name span { color: var(--purple); }
+
+  .subtitle {
+    margin-top: 0.5rem;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--txt2);
+  }
+
+  /* ---- DROPDOWN SECTION ---- */
+  .nav-section {
+    width: 100%;
+    animation: fadeUp 0.5s 0.1s ease both;
+    opacity: 0;
+    animation-fill-mode: forwards;
+  }
+
+  .nav-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.2rem;
+    background: var(--bg2);
+    border: 1px solid var(--purple-border);
+    color: var(--txt);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    border-radius: 3px;
+  }
+
+  .nav-trigger:hover {
+    border-color: var(--purple);
+    background: var(--bg3);
+  }
+
+  .nav-trigger.open {
+    border-color: var(--purple);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-color: transparent;
+  }
+
+  .trigger-left { display: flex; align-items: center; gap: 10px; }
+
+  .trigger-icon {
+    width: 22px; height: 22px;
+    border: 1px solid var(--purple-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+    color: var(--purple);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .arrow {
+    font-size: 10px;
+    color: var(--txt2);
+    transition: transform 0.25s;
+  }
+  .nav-trigger.open .arrow { transform: rotate(180deg); color: var(--purple); }
+
+  /* ---- DROPDOWN PANEL ---- */
+  .dropdown-panel {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--purple);
+    border-top: none;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease;
+  }
+
+  .dropdown-panel.open {
+    max-height: 400px;
+  }
+
+  .dropdown-inner { padding: 0.5rem; display: flex; flex-direction: column; gap: 2px; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.75rem 1rem;
+    color: var(--txt2);
+    text-decoration: none;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+
+  .nav-item:hover {
+    background: var(--purple-glow);
+    color: var(--purple);
+  }
+
+  .item-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--purple-dark);
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .nav-item:hover .item-dot { background: var(--purple); }
+
+  /* coming soon block */
+  .coming-soon {
+    margin: 0.4rem 0.5rem 0.5rem;
+    padding: 0.6rem 1rem;
+    border-top: 1px solid var(--purple-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--txt2);
+    opacity: 0.6;
+  }
+
+  .dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .dots span {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--txt2);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  /* ---- DIRECT LINK (gym) ---- */
+  .direct-link {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 1.2rem;
+    background: var(--bg2);
+    border: 1px solid var(--purple-border);
+    color: var(--txt2);
+    text-decoration: none;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    border-radius: 3px;
+    transition: all 0.2s;
+    animation: fadeUp 0.5s 0.2s ease both;
+    opacity: 0;
+    animation-fill-mode: forwards;
+  }
+
+  .direct-link:hover {
+    border-color: var(--purple);
+    background: var(--bg3);
+    color: var(--purple);
+  }
+
+  .direct-left { display: flex; align-items: center; gap: 10px; }
+
+  .link-arrow { font-size: 12px; color: var(--txt2); transition: color 0.2s, transform 0.2s; }
+  .direct-link:hover .link-arrow { color: var(--purple); transform: translateX(3px); }
+
+  /* ---- FOOTER ---- */
+  .footer {
+    position: fixed;
+    bottom: 1.5rem;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--txt2);
+    opacity: 0.4;
+    z-index: 1;
+  }
+
+  /* ---- ANIMATIONS ---- */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50%       { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="orb"></div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1 class="name">Ricardo <span>Dodds</span><span class="cursor"></span></h1>
+    <p class="subtitle">// panel de navegación</p>
+  </div>
+
+  <!-- DROPDOWN: Contadores -->
+  <div class="nav-section">
+    <button class="nav-trigger" id="trigger" onclick="toggleDropdown()">
+      <div class="trigger-left">
+        <div class="trigger-icon">#</div>
+        Contadores
+      </div>
+      <span class="arrow" id="arrow">▼</span>
+    </button>
+    <div class="dropdown-panel" id="panel">
+      <div class="dropdown-inner">
+        <a href="../contadores/boku_no_hero.html" class="nav-item">
+          <span class="item-dot"></span>
+          Contador Boku no Hero
+        </a>
+        <a href="../contadores/mortal_kombat.html" class="nav-item">
+          <span class="item-dot"></span>
+          Contador Mortal Kombat
+        </a>
+        <a href="../contadores/budokai.html" class="nav-item">
+          <span class="item-dot"></span>
+          Contador Budokai
+        </a>
+        <a href="../contadores/golf_it.html" class="nav-item">
+          <span class="item-dot"></span>
+          Contador Golf It
+        </a>
+        <div class="coming-soon">
+          <div class="dots">
+            <span></span><span></span><span></span>
+          </div>
+          más contadores próximamente
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECT LINK: Gym -->
+  <a href="../gym/gym.html" class="direct-link">
+    <div class="direct-left">
+      <div class="trigger-icon">G</div>
+      Gym casero, ¿me creo?
+    </div>
+    <span class="link-arrow">→</span>
+  </a>
+
+</div>
+
+<div class="footer">Ricardo Dodds — 2026</div>
+
+<script>
+  function toggleDropdown() {
+    const trigger = document.getElementById('trigger');
+    const panel = document.getElementById('panel');
+    trigger.classList.toggle('open');
+    panel.classList.toggle('open');
+  }
+</script>
+
+</body>
+</html>
