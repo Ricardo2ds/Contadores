@@ -7,28 +7,1070 @@
 <title>Gym casero</title>
 <link rel="stylesheet" href="../globals.css">
 <style>
-  body { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; overflow-x:hidden; gap:2rem; padding:2rem; }
-  .wrap { position:relative; z-index:1; text-align:center; display:flex; flex-direction:column; align-items:center; gap:1rem; }
-  .title { font-family:var(--display); font-size:2.2rem; font-weight:800; letter-spacing:-0.02em; }
-  .badge { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; padding:5px 14px; border:1px solid var(--border); color:var(--txt2); border-radius:var(--radius); margin-top:0.5rem; }
-  .video-wrap { position:relative; z-index:1; width:100%; max-width:720px; aspect-ratio:16/9; border:1px solid var(--border); border-radius:4px; overflow:hidden; box-shadow:0 0 40px rgba(168,85,247,0.25); }
-  .video-wrap iframe { width:100%; height:100%; border:none; }
+  body { display:flex; flex-direction:column; align-items:center; min-height:100vh; overflow-x:hidden; padding-bottom:4rem; }
+
+  /* TOP BAR */
+  .topbar { position:fixed; top:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:1rem 2rem; background:rgba(7,5,15,0.92); backdrop-filter:blur(12px); border-bottom:1px solid var(--border); z-index:100; }
+  .page-title { font-family:var(--display); font-size:1rem; font-weight:700; }
+  .page-title span { color:var(--purple); }
+  .status { display:inline-flex; align-items:center; gap:7px; font-size:11px; color:var(--txt2); }
+  .status-dot { width:7px; height:7px; border-radius:50%; background:var(--txt3); flex-shrink:0; }
+  .status-dot.connected { background:#22c55e; box-shadow:0 0 6px #22c55e; }
+  .status-dot.loading { background:var(--purple); animation:pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+  /* CONTENT */
+  .content { position:relative; z-index:1; width:100%; max-width:860px; padding:5.5rem 1.5rem 2rem; display:flex; flex-direction:column; gap:1rem; }
+
+  /* PAGE HEADER */
+  .page-header { margin-bottom:0.5rem; animation:fadeUp 0.4s ease both; }
+  .page-header h1 { font-family:var(--display); font-size:clamp(1.8rem,4vw,2.6rem); font-weight:800; margin-top:0.3rem; }
+
+  /* ===== CALENDARIO ===== */
+  .calendar-box { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; animation:fadeUp 0.4s 0.05s ease both; opacity:0; animation-fill-mode:forwards; }
+
+  .cal-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.2rem; border-bottom:1px solid var(--border); }
+  .cal-month { font-family:var(--display); font-size:1.1rem; font-weight:700; text-transform:capitalize; }
+  .cal-nav { display:flex; gap:6px; }
+  .cal-nav button { width:30px; height:30px; background:transparent; border:1px solid var(--border); color:var(--txt2); font-size:14px; cursor:pointer; border-radius:var(--radius); transition:all var(--transition); display:flex;align-items:center;justify-content:center; }
+  .cal-nav button:hover { border-color:var(--purple); color:var(--purple); }
+
+  /* DÍAS SLIDER */
+  .days-slider-wrap { position:relative; padding:1rem 2.5rem; overflow:hidden; }
+  .days-slider { display:flex; gap:6px; transition:transform 0.3s cubic-bezier(.4,0,.2,1); }
+  .day-pill {
+    flex-shrink:0; width:52px; display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:0.5rem 0.3rem; border-radius:6px; cursor:pointer; transition:all 0.2s;
+    border:1px solid transparent; position:relative;
+  }
+  .day-pill:hover { background:var(--bg3); border-color:var(--border); }
+  .day-pill.today { border-color:var(--purple); background:rgba(168,85,247,0.1); }
+  .day-pill.selected { border-color:var(--purple); background:rgba(168,85,247,0.18); }
+  .day-pill.attended::after { content:''; position:absolute; bottom:4px; width:5px; height:5px; border-radius:50%; background:#22c55e; box-shadow:0 0 5px #22c55e; }
+  .day-num { font-family:var(--display); font-size:1rem; font-weight:700; color:var(--txt); }
+  .day-name { font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--txt2); }
+  .day-pill.today .day-num { color:var(--purple); }
+  .day-pill.dimmed .day-num { opacity:0.3; }
+  .day-pill.dimmed .day-name { opacity:0.3; }
+
+  /* FLECHAS SLIDER */
+  .slider-arrow { position:absolute; top:50%; transform:translateY(-50%); background:rgba(7,5,15,0.8); border:1px solid var(--border); color:var(--txt2); width:24px; height:40px; display:flex;align-items:center;justify-content:center; cursor:pointer; font-size:12px; border-radius:var(--radius); z-index:2; transition:all 0.2s; }
+  .slider-arrow:hover { border-color:var(--purple); color:var(--purple); }
+  .slider-arrow.left { left:4px; }
+  .slider-arrow.right { right:4px; }
+
+  /* SELECTED DATE INFO */
+  .cal-footer { padding:0.8rem 1.2rem; border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.8rem; }
+  .selected-date-label { font-size:12px; color:var(--txt2); }
+  .selected-date-label strong { color:var(--txt); }
+  .attend-status { display:flex; align-items:center; gap:6px; font-size:11px; }
+  .attend-dot { width:7px; height:7px; border-radius:50%; background:var(--txt3); }
+  .attend-dot.yes { background:#22c55e; box-shadow:0 0 5px #22c55e; }
+  .attend-btns { display:flex; gap:6px; }
+  .btn-attend { padding:0.4rem 1rem; font-family:var(--mono); font-size:11px; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; border-radius:var(--radius); transition:all 0.2s; }
+  .btn-attend.yes { background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.4); color:#22c55e; }
+  .btn-attend.yes:hover { background:rgba(34,197,94,0.25); }
+  .btn-attend.no { background:transparent; border:1px solid rgba(239,68,68,0.3); color:#ef4444; }
+  .btn-attend.no:hover { background:rgba(239,68,68,0.1); }
+
+  /* ===== DESPLEGABLES GENERALES ===== */
+  .accordion { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; animation:fadeUp 0.4s ease both; opacity:0; animation-fill-mode:forwards; }
+
+  .accordion-trigger { width:100%; display:flex; align-items:center; justify-content:space-between; padding:1rem 1.2rem; background:transparent; border:none; color:var(--txt); font-family:var(--mono); font-size:13px; letter-spacing:0.06em; cursor:pointer; text-align:left; transition:background 0.2s; }
+  .accordion-trigger:hover { background:var(--bg3); }
+  .accordion-trigger.open { border-bottom:1px solid var(--border); }
+  .acc-left { display:flex; align-items:center; gap:10px; }
+  .acc-icon { width:24px; height:24px; border:1px solid var(--border); border-radius:2px; display:flex;align-items:center;justify-content:center; font-size:11px; color:var(--purple); flex-shrink:0; }
+  .acc-arrow { font-size:10px; color:var(--txt2); transition:transform 0.25s; }
+  .accordion-trigger.open .acc-arrow { transform:rotate(180deg); color:var(--purple); }
+
+  .accordion-body { max-height:0; overflow:hidden; transition:max-height 0.35s cubic-bezier(.4,0,.2,1); }
+  .accordion-body.open { max-height:9999px; }
+
+  /* ===== MÉTODO ===== */
+  .method-wrap { padding:1.2rem; display:flex; gap:8px; flex-wrap:wrap; }
+  .method-btn { flex:1; min-width:140px; padding:0.9rem 1rem; background:var(--bg); border:1px solid var(--border); color:var(--txt2); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; border-radius:var(--radius); transition:all 0.2s; text-align:center; }
+  .method-btn:hover { border-color:var(--purple-border); }
+  .method-btn.active { border-color:var(--purple); color:var(--purple); background:var(--purple-glow); }
+  .method-desc { padding:0 1.2rem 1.2rem; font-size:12px; color:var(--txt2); line-height:1.7; border-top:1px solid var(--border); padding-top:0.8rem; }
+  .method-desc strong { color:var(--purple); }
+
+  /* ===== EJERCICIOS — grupos musculares ===== */
+  .muscle-groups { padding:0.5rem; display:flex; flex-direction:column; gap:1px; background:var(--border); }
+  .muscle-group { background:var(--bg2); }
+  .mg-trigger { width:100%; display:flex; align-items:center; justify-content:space-between; padding:0.85rem 1rem; background:transparent; border:none; color:var(--txt); font-family:var(--mono); font-size:12px; letter-spacing:0.08em; cursor:pointer; text-align:left; transition:background 0.2s; }
+  .mg-trigger:hover { background:var(--bg3); }
+  .mg-trigger.open { border-bottom:1px solid rgba(168,85,247,0.1); }
+  .mg-name { display:flex; align-items:center; gap:8px; }
+  .mg-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .mg-arrow { font-size:9px; color:var(--txt3); transition:transform 0.2s; }
+  .mg-trigger.open .mg-arrow { transform:rotate(180deg); color:var(--purple); }
+  .mg-body { max-height:0; overflow:hidden; transition:max-height 0.3s ease; }
+  .mg-body.open { max-height:9999px; }
+
+  /* ===== EJERCICIO CARD ===== */
+  .exercise-list { display:flex; flex-direction:column; gap:1px; background:rgba(168,85,247,0.05); }
+  .exercise-card { background:var(--bg2); padding:1rem; display:flex; gap:1rem; align-items:flex-start; }
+  .exercise-card:hover { background:var(--bg3); }
+
+  /* Imagen placeholder */
+  .ex-img { width:60px; height:60px; flex-shrink:0; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius); display:flex; align-items:center; justify-content:center; font-size:9px; color:var(--txt3); text-align:center; letter-spacing:0.05em; line-height:1.4; padding:4px; }
+
+  .ex-info { flex:1; display:flex; flex-direction:column; gap:0.6rem; }
+  .ex-name-row { display:flex; align-items:baseline; justify-content:space-between; gap:0.5rem; flex-wrap:wrap; }
+  .ex-name { font-family:var(--display); font-size:0.95rem; font-weight:700; }
+  .ex-pct { font-size:10px; letter-spacing:0.1em; color:var(--txt3); }
+  .ex-pct.primary { color:var(--purple); }
+
+  /* Series — círculos */
+  .series-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .serie-dot {
+    width:28px; height:28px; border-radius:50%; border:2px solid var(--border);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    font-size:10px; font-weight:700; color:var(--txt3); transition:all 0.2s;
+    flex-shrink:0;
+  }
+  .serie-dot:hover { border-color:var(--purple); color:var(--purple); }
+  .serie-dot.filled { border-color:var(--purple); background:var(--purple-glow); color:var(--purple); }
+  .serie-dot.active { border-color:var(--purple); background:var(--purple); color:#07050f; }
+
+  .serie-inputs { display:flex; gap:6px; margin-top:0.4rem; }
+  .serie-input-wrap { display:flex; flex-direction:column; gap:3px; }
+  .serie-input-label { font-size:9px; letter-spacing:0.1em; text-transform:uppercase; color:var(--txt3); }
+  .serie-input { width:68px; padding:0.35rem 0.5rem; background:var(--bg); border:1px solid var(--border); color:var(--txt); font-family:var(--mono); font-size:12px; border-radius:var(--radius); outline:none; transition:border-color 0.2s; }
+  .serie-input:focus { border-color:var(--purple); }
+
+  /* ===== MAPA MUSCULAR ===== */
+  .body-map-wrap { padding:1.5rem; display:flex; gap:2rem; justify-content:center; flex-wrap:wrap; }
+  .body-figure { display:flex; flex-direction:column; align-items:center; gap:0.5rem; }
+  .body-label { font-size:10px; letter-spacing:0.15em; text-transform:uppercase; color:var(--txt3); }
+
+  svg.body-svg { width:130px; height:260px; }
+  .muscle { fill:rgba(168,85,247,0.06); stroke:rgba(168,85,247,0.2); stroke-width:1; transition:fill 0.5s, stroke 0.5s; }
+  .muscle.level-1 { fill:rgba(168,85,247,0.2); stroke:rgba(168,85,247,0.5); }
+  .muscle.level-2 { fill:rgba(168,85,247,0.4); stroke:rgba(168,85,247,0.7); }
+  .muscle.level-3 { fill:rgba(168,85,247,0.65); stroke:#a855f7; filter:drop-shadow(0 0 4px rgba(168,85,247,0.5)); }
+  .muscle.level-4 { fill:#a855f7; stroke:#c084fc; filter:drop-shadow(0 0 8px rgba(168,85,247,0.8)); }
+
+  .map-legend { padding:0 1.5rem 1.5rem; display:flex; gap:1rem; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--txt2); }
+  .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+  /* ===== GRÁFICOS ===== */
+  .chart-section { padding:1.2rem; display:flex; flex-direction:column; gap:1.2rem; }
+  .chart-title { font-size:11px; letter-spacing:0.15em; text-transform:uppercase; color:var(--txt2); margin-bottom:0.8rem; }
+  .bar-list { display:flex; flex-direction:column; gap:8px; }
+  .bar-row { display:flex; flex-direction:column; gap:3px; }
+  .bar-label-row { display:flex; justify-content:space-between; font-size:11px; }
+  .bar-name { color:var(--txt); }
+  .bar-val { color:var(--purple); font-weight:700; }
+  .bar-track { height:5px; background:rgba(168,85,247,0.1); border-radius:3px; overflow:hidden; }
+  .bar-fill { height:100%; background:var(--purple); border-radius:3px; transition:width 0.6s cubic-bezier(.4,0,.2,1); }
+
+  /* SAVE BAR */
+  .save-bar-gym { position:fixed; bottom:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:0.8rem 2rem; background:rgba(7,5,15,0.95); backdrop-filter:blur(12px); border-top:1px solid var(--border); z-index:100; }
+  .save-info { font-size:12px; color:var(--txt2); }
+  .save-info strong { color:var(--purple); }
+  .btn-save-gym { padding:0.5rem 1.6rem; background:var(--purple); border:none; color:#07050f; font-family:var(--mono); font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; border-radius:var(--radius); transition:all 0.2s; }
+  .btn-save-gym:hover { background:#c084fc; }
+  .btn-save-gym:disabled { opacity:0.35; cursor:not-allowed; }
+
+  /* INFO CARDS */
+  .info-list { padding:0.8rem; display:flex; flex-direction:column; gap:1px; background:var(--border); }
+  .info-card { background:var(--bg2); padding:1rem; }
+  .info-card-name { font-family:var(--display); font-size:1rem; font-weight:700; margin-bottom:0.4rem; }
+  .info-card-desc { font-size:12px; color:var(--txt2); line-height:1.7; }
+  .info-tag { display:inline-block; font-size:10px; padding:2px 8px; border-radius:2px; border:1px solid var(--purple-border); color:var(--purple); margin:0.4rem 0.3rem 0 0; }
+
+  /* HISTÓRICO */
+  .hist-section { padding:1.2rem; }
+  .hist-empty { font-size:12px; color:var(--txt3); text-align:center; padding:2rem; }
+  .hist-stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:1.2rem; }
+  .hist-stat { background:var(--bg2); padding:1rem; }
+  .hist-stat-val { font-family:var(--display); font-size:1.6rem; font-weight:800; color:var(--purple); }
+  .hist-stat-lbl { font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--txt3); margin-top:2px; }
+  .hist-trend { font-size:11px; margin-top:2px; }
+  .hist-trend.up { color:#22c55e; }
+  .hist-trend.down { color:#ef4444; }
+  .hist-trend.neutral { color:var(--txt3); }
 </style>
 </head>
 <body class="grid-bg">
 <div class="glow-orb"></div>
-<div class="wrap">
-  <p class="section-label">// gym</p>
-  <h1 class="title">Gym casero</h1>
-  <div class="badge">en construcción</div>
-  <a href="../main/index.html" class="btn-back">← volver al inicio</a>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a href="../main/index.html" class="btn-back">← inicio</a>
+  <span class="page-title">Gym <span>casero</span></span>
+  <div class="status">
+    <div class="status-dot loading" id="statusDot"></div>
+    <span id="statusText">conectando...</span>
+  </div>
 </div>
-<div class="video-wrap">
-  <iframe
-    src="https://www.youtube.com/embed/KIYMXR2FlSg?autoplay=1&mute=1&loop=1&playlist=KIYMXR2FlSg&controls=1"
-    allow="autoplay; encrypted-media"
-    allowfullscreen>
-  </iframe>
+
+<div class="content">
+  <div class="page-header">
+    <p class="section-label">// registro de entrenamiento</p>
+    <h1>Gym casero<span class="cursor"></span></h1>
+  </div>
+
+  <!-- ======= CALENDARIO ======= -->
+  <div class="calendar-box">
+    <div class="cal-header">
+      <span class="cal-month" id="calMonthLabel">—</span>
+      <div class="cal-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+    </div>
+    <div class="days-slider-wrap">
+      <button class="slider-arrow left" onclick="slideLeft()">‹</button>
+      <div class="days-slider" id="daysSlider"></div>
+      <button class="slider-arrow right" onclick="slideRight()">›</button>
+    </div>
+    <div class="cal-footer">
+      <div>
+        <div class="selected-date-label">Fecha seleccionada: <strong id="selectedDateLabel">—</strong></div>
+        <div class="attend-status" id="attendStatus">
+          <div class="attend-dot" id="attendDot"></div>
+          <span id="attendText">Sin registro</span>
+        </div>
+      </div>
+      <div class="attend-btns">
+        <button class="btn-attend yes" onclick="registrarAsistencia(true)">✓ Asistí</button>
+        <button class="btn-attend no"  onclick="registrarAsistencia(false)">✗ Quitar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= MÉTODO ======= -->
+  <div class="accordion" style="animation-delay:0.1s">
+    <button class="accordion-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><div class="acc-icon">M</div>Método de entrenamiento</div>
+      <span class="acc-arrow">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="method-wrap">
+        <button class="method-btn active" id="btnClasico" onclick="setMethod('clasico')">Método Clásico</button>
+        <button class="method-btn" id="btnBilbo" onclick="setMethod('bilbo')">Método Bilbo</button>
+      </div>
+      <div class="method-desc" id="methodDesc">
+        <strong>Método Clásico:</strong> Series de 8-12 repeticiones con peso moderado-alto. Enfocado en hipertrofia con descansos de 60-90 segundos entre series. Ideal para construir volumen muscular de manera progresiva.
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= EJERCICIOS ======= -->
+  <div class="accordion" style="animation-delay:0.15s">
+    <button class="accordion-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><div class="acc-icon">E</div>Ejercicios del día</div>
+      <span class="acc-arrow">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="muscle-groups" id="muscleGroups"></div>
+    </div>
+  </div>
+
+  <!-- ======= INFORMACIÓN ======= -->
+  <div class="accordion" style="animation-delay:0.2s">
+    <button class="accordion-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><div class="acc-icon">i</div>Información</div>
+      <span class="acc-arrow">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="info-list" id="infoList"></div>
+    </div>
+  </div>
+
+  <!-- ======= ESTÍMULOS DE HOY ======= -->
+  <div class="accordion" style="animation-delay:0.25s">
+    <button class="accordion-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><div class="acc-icon">◎</div>Estímulos de hoy</div>
+      <span class="acc-arrow">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="body-map-wrap">
+        <!-- FRENTE -->
+        <div class="body-figure">
+          <div class="body-label">Frente</div>
+          <svg class="body-svg" viewBox="0 0 130 260" xmlns="http://www.w3.org/2000/svg">
+            <!-- Cabeza -->
+            <ellipse cx="65" cy="22" rx="18" ry="20" fill="none" stroke="rgba(168,85,247,0.15)" stroke-width="1"/>
+            <!-- Cuello -->
+            <rect x="59" y="40" width="12" height="10" rx="3" fill="none" stroke="rgba(168,85,247,0.1)" stroke-width="1"/>
+            <!-- Pectoral izq -->
+            <ellipse id="f-pec-l" class="muscle" cx="50" cy="68" rx="18" ry="14"/>
+            <!-- Pectoral der -->
+            <ellipse id="f-pec-r" class="muscle" cx="80" cy="68" rx="18" ry="14"/>
+            <!-- Hombro izq -->
+            <ellipse id="f-sho-l" class="muscle" cx="28" cy="60" rx="12" ry="14"/>
+            <!-- Hombro der -->
+            <ellipse id="f-sho-r" class="muscle" cx="102" cy="60" rx="12" ry="14"/>
+            <!-- Bícep izq -->
+            <ellipse id="f-bic-l" class="muscle" cx="22" cy="90" rx="9" ry="18"/>
+            <!-- Bícep der -->
+            <ellipse id="f-bic-r" class="muscle" cx="108" cy="90" rx="9" ry="18"/>
+            <!-- Antebrazo izq -->
+            <ellipse id="f-fore-l" class="muscle" cx="18" cy="120" rx="7" ry="16"/>
+            <!-- Antebrazo der -->
+            <ellipse id="f-fore-r" class="muscle" cx="112" cy="120" rx="7" ry="16"/>
+            <!-- Abdomen -->
+            <ellipse id="f-abs" class="muscle" cx="65" cy="95" rx="16" ry="20"/>
+            <!-- Oblicuos -->
+            <ellipse id="f-obl-l" class="muscle" cx="46" cy="100" rx="8" ry="14"/>
+            <ellipse id="f-obl-r" class="muscle" cx="84" cy="100" rx="8" ry="14"/>
+            <!-- Cuádriceps izq -->
+            <ellipse id="f-quad-l" class="muscle" cx="48" cy="170" rx="16" ry="30"/>
+            <!-- Cuádriceps der -->
+            <ellipse id="f-quad-r" class="muscle" cx="82" cy="170" rx="16" ry="30"/>
+            <!-- Gemelo izq front -->
+            <ellipse id="f-calf-l" class="muscle" cx="46" cy="230" rx="11" ry="20"/>
+            <!-- Gemelo der front -->
+            <ellipse id="f-calf-r" class="muscle" cx="84" cy="230" rx="11" ry="20"/>
+            <!-- Contorno cuerpo -->
+            <path d="M47,50 Q28,52 20,65 L12,145 Q14,148 18,148 L22,110 L18,148 L20,200 L40,200 L42,145 L65,148 L88,145 L90,200 L110,200 L112,148 L108,148 L112,110 L118,148 Q122,148 118,145 L110,65 Q102,52 83,50 Z" fill="none" stroke="rgba(168,85,247,0.12)" stroke-width="1"/>
+            <!-- Piernas contorno -->
+            <path d="M40,200 L34,255 L58,255 L65,210 L72,255 L96,255 L90,200Z" fill="none" stroke="rgba(168,85,247,0.12)" stroke-width="1"/>
+          </svg>
+        </div>
+        <!-- ESPALDA -->
+        <div class="body-figure">
+          <div class="body-label">Espalda</div>
+          <svg class="body-svg" viewBox="0 0 130 260" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="65" cy="22" rx="18" ry="20" fill="none" stroke="rgba(168,85,247,0.15)" stroke-width="1"/>
+            <!-- Trapecio -->
+            <ellipse id="b-trap" class="muscle" cx="65" cy="58" rx="28" ry="14"/>
+            <!-- Hombro post izq -->
+            <ellipse id="b-sho-l" class="muscle" cx="28" cy="60" rx="12" ry="14"/>
+            <!-- Hombro post der -->
+            <ellipse id="b-sho-r" class="muscle" cx="102" cy="60" rx="12" ry="14"/>
+            <!-- Dorsal izq -->
+            <ellipse id="b-lat-l" class="muscle" cx="42" cy="95" rx="18" ry="26"/>
+            <!-- Dorsal der -->
+            <ellipse id="b-lat-r" class="muscle" cx="88" cy="95" rx="18" ry="26"/>
+            <!-- Trícep izq -->
+            <ellipse id="b-tri-l" class="muscle" cx="22" cy="90" rx="9" ry="18"/>
+            <!-- Trícep der -->
+            <ellipse id="b-tri-r" class="muscle" cx="108" cy="90" rx="9" ry="18"/>
+            <!-- Lumbar -->
+            <ellipse id="b-low" class="muscle" cx="65" cy="125" rx="16" ry="14"/>
+            <!-- Glúteo izq -->
+            <ellipse id="b-glu-l" class="muscle" cx="50" cy="155" rx="18" ry="18"/>
+            <!-- Glúteo der -->
+            <ellipse id="b-glu-r" class="muscle" cx="80" cy="155" rx="18" ry="18"/>
+            <!-- Isquio izq -->
+            <ellipse id="b-ham-l" class="muscle" cx="48" cy="195" rx="15" ry="25"/>
+            <!-- Isquio der -->
+            <ellipse id="b-ham-r" class="muscle" cx="82" cy="195" rx="15" ry="25"/>
+            <!-- Gemelo post izq -->
+            <ellipse id="b-calf-l" class="muscle" cx="46" cy="235" rx="11" ry="16"/>
+            <!-- Gemelo post der -->
+            <ellipse id="b-calf-r" class="muscle" cx="84" cy="235" rx="11" ry="16"/>
+            <path d="M47,50 Q28,52 20,65 L12,145 Q14,148 18,148 L22,110 L18,148 L20,200 L40,200 L42,145 L65,148 L88,145 L90,200 L110,200 L112,148 L108,148 L112,110 L118,148 Q122,148 118,145 L110,65 Q102,52 83,50 Z" fill="none" stroke="rgba(168,85,247,0.12)" stroke-width="1"/>
+            <path d="M40,200 L34,255 L58,255 L65,210 L72,255 L96,255 L90,200Z" fill="none" stroke="rgba(168,85,247,0.12)" stroke-width="1"/>
+          </svg>
+        </div>
+      </div>
+      <div class="map-legend">
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(168,85,247,0.2)"></div>Poco</div>
+        <div class="legend-item"><div class="legend-dot" style="background:rgba(168,85,247,0.5)"></div>Moderado</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#a855f7"></div>Intenso</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= GRÁFICOS ======= -->
+  <div class="accordion" style="animation-delay:0.3s">
+    <button class="accordion-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><div class="acc-icon">▦</div>Gráficos del día</div>
+      <span class="acc-arrow">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="chart-section" id="chartSection">
+        <p style="font-size:12px;color:var(--txt3);text-align:center;padding:1rem">Registra ejercicios para ver los gráficos</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= HISTÓRICO ======= -->
+  <div class="accordion" style="animation-delay:0.35s">
+    <button class="accordion-trigger" onclick="toggleAcc(this)">
+      <div class="acc-left"><div class="acc-icon">~</div>Histórico</div>
+      <span class="acc-arrow">▼</span>
+    </button>
+    <div class="accordion-body">
+      <div class="hist-section" id="histSection">
+        <div class="hist-stat-grid" id="histStats"></div>
+        <div class="bar-list" id="histChart"></div>
+        <p class="hist-empty" id="histEmpty" style="display:none">Sin suficientes datos históricos aún</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- SAVE BAR -->
+<div class="save-bar-gym">
+  <span class="save-info">Cambios pendientes: <strong id="pendingCount">0</strong></span>
+  <button class="btn-save-gym" id="btnSaveGym" disabled onclick="guardarTodo()">Guardar sesión</button>
 </div>
+
+<script type="module">
+import { cargarDatos, inicializarSiNoExiste } from '../../back_end/firebase.js';
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// ============================================================
+// DATOS BASE
+// ============================================================
+const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const DIAS_SEMANA = ['dom','lun','mar','mié','jue','vie','sáb'];
+
+const METHODS = {
+  clasico: { label:'Método Clásico', desc:'<strong>Método Clásico:</strong> Series de 8-12 repeticiones con peso moderado-alto. Enfocado en hipertrofia con descansos de 60-90 segundos entre series. Ideal para construir volumen muscular de manera progresiva.' },
+  bilbo:   { label:'Método Bilbo',   desc:'<strong>Método Bilbo:</strong> Protocolo de alta frecuencia con series de 5-6 repeticiones al fallo con pesos elevados. Mayor énfasis en fuerza y densidad muscular. Descansos de 2-3 minutos entre series.' }
+};
+
+// Mapeo músculo → IDs SVG y nivel de activación
+const MUSCLE_MAP = {
+  pecho:       { front:['f-pec-l','f-pec-r'], back:[] },
+  hombros:     { front:['f-sho-l','f-sho-r'], back:['b-sho-l','b-sho-r'] },
+  bicep:       { front:['f-bic-l','f-bic-r'], back:[] },
+  tricep:      { back:['b-tri-l','b-tri-r'],  front:[] },
+  espalda:     { back:['b-lat-l','b-lat-r','b-trap'], front:[] },
+  lumbar:      { back:['b-low'], front:[] },
+  gluteo:      { back:['b-glu-l','b-glu-r'], front:[] },
+  cuadriceps:  { front:['f-quad-l','f-quad-r'], back:[] },
+  isquio:      { back:['b-ham-l','b-ham-r'], front:[] },
+  gemelos:     { front:['f-calf-l','f-calf-r'], back:['b-calf-l','b-calf-r'] },
+  abdomen:     { front:['f-abs','f-obl-l','f-obl-r'], back:[] },
+};
+
+// Grupos musculares y ejercicios
+const MUSCLE_GROUPS = [
+  {
+    id:'pecho', name:'Pecho', color:'#a855f7',
+    exercises:[
+      { id:'press_plano',    name:'Press plano',    primary:'pecho', also:[{m:'tricep',pct:30},{m:'hombros',pct:20}] },
+      { id:'press_inclinado',name:'Press inclinado',primary:'pecho', also:[{m:'hombros',pct:35},{m:'tricep',pct:25}] },
+      { id:'flexiones',      name:'Flexiones de brazo', primary:'pecho', also:[{m:'tricep',pct:30},{m:'hombros',pct:20}] },
+    ]
+  },
+  {
+    id:'bicep', name:'Bícep', color:'#f59e0b',
+    exercises:[
+      { id:'curl_bicep',      name:'Curl de bícep',    primary:'bicep', also:[] },
+      { id:'curl_predicador', name:'Curl predicador',  primary:'bicep', also:[] },
+      { id:'curl_martillo',   name:'Curl martillo',    primary:'bicep', also:[{m:'espalda',pct:10}] },
+      { id:'dominadas',       name:'Dominadas',        primary:'espalda', also:[{m:'bicep',pct:40},{m:'hombros',pct:15}] },
+    ]
+  },
+  {
+    id:'tricep', name:'Trícep', color:'#38bdf8',
+    exercises:[
+      { id:'fondos',         name:'Fondos',                    primary:'tricep', also:[{m:'pecho',pct:30},{m:'hombros',pct:25},{m:'espalda',pct:10}] },
+      { id:'flex_diamante',  name:'Flexiones diamante',        primary:'tricep', also:[{m:'pecho',pct:25}] },
+      { id:'elev_cabeza',    name:'Elevación detrás cabeza',   primary:'tricep', also:[] },
+    ]
+  },
+  {
+    id:'hombros', name:'Hombros', color:'#22c55e',
+    exercises:[
+      { id:'press_militar',  name:'Press militar',          primary:'hombros', also:[{m:'tricep',pct:25}] },
+      { id:'elev_laterales', name:'Elevaciones laterales',  primary:'hombros', also:[] },
+    ]
+  },
+  {
+    id:'espalda', name:'Espalda', color:'#e879f9',
+    exercises:[
+      { id:'dominadas',      name:'Dominadas',      primary:'espalda', also:[{m:'bicep',pct:40},{m:'hombros',pct:15}] },
+      { id:'remo_barra',     name:'Remo con barra', primary:'espalda', also:[{m:'bicep',pct:20},{m:'lumbar',pct:15}] },
+      { id:'peso_muerto',    name:'Peso muerto',    primary:'espalda', also:[{m:'gluteo',pct:30},{m:'isquio',pct:25},{m:'lumbar',pct:20}] },
+    ]
+  },
+  {
+    id:'tren_inferior', name:'Tren inferior', color:'#fb923c',
+    exercises:[
+      { id:'sentadillas',   name:'Sentadillas con peso', primary:'cuadriceps', also:[{m:'gluteo',pct:30},{m:'isquio',pct:20}] },
+      { id:'peso_muerto',   name:'Peso muerto',          primary:'espalda',    also:[{m:'gluteo',pct:30},{m:'isquio',pct:25},{m:'lumbar',pct:20}] },
+      { id:'salto_cuerda',  name:'Salto de cuerda',      primary:'gemelos',    also:[{m:'cuadriceps',pct:20},{m:'abdomen',pct:10}] },
+    ]
+  },
+];
+
+// Info adicional de ejercicios
+const EXERCISE_INFO = {
+  press_plano:    { desc:'Ejercicio básico de empuje horizontal. Activa principalmente el pectoral mayor, con participación secundaria de tríceps y deltoides anterior.' },
+  press_inclinado:{ desc:'Variante del press plano con banco inclinado. Mayor activación de la porción clavicular del pectoral y deltoides anterior.' },
+  flexiones:      { desc:'Ejercicio de peso corporal que trabaja pecho, tríceps y hombros. Permite muchas variaciones de agarre.' },
+  curl_bicep:     { desc:'Movimiento de flexión de codo con barra o mancuerna. Aislamiento directo del bícep braquial.' },
+  curl_predicador:{ desc:'Curl con apoyo en banco predicador. Elimina el balanceo y aumenta el aislamiento del bícep.' },
+  curl_martillo:  { desc:'Curl con agarre neutro. Trabaja el bícep braquial y el braquiorradial del antebrazo.' },
+  fondos:         { desc:'Ejercicio compuesto en paralelas. Trabaja tríceps, pecho y hombros. Alta demanda de fuerza total del tren superior.' },
+  flex_diamante:  { desc:'Flexión con manos juntas formando un diamante. Máximo aislamiento del tríceps entre las flexiones.' },
+  elev_cabeza:    { desc:'Extensión de tríceps detrás de la cabeza con mancuerna. Aislamiento del tríceps en elongación máxima.' },
+  press_militar:  { desc:'Press sobre la cabeza con barra o mancuernas. Principal ejercicio para deltoides medial y anterior.' },
+  elev_laterales: { desc:'Elevación lateral de mancuernas. Aislamiento del deltoides medial para amplitud de hombros.' },
+  dominadas:      { desc:'Ejercicio de tracción vertical. El más completo para espalda. Activa dorsales, bíceps y romboides.' },
+  remo_barra:     { desc:'Tracción horizontal con barra. Trabaja dorsales, romboides, trapecios medios y bíceps.' },
+  peso_muerto:    { desc:'Ejercicio compuesto de cadena posterior. Trabaja espalda baja, glúteos, isquiotibiales y dorsales.' },
+  sentadillas:    { desc:'Ejercicio rey del tren inferior. Activa cuádriceps, glúteos, isquiotibiales y core.' },
+  salto_cuerda:   { desc:'Cardio de alta intensidad. Trabaja gemelos, cuádriceps y coordina todo el cuerpo. Medir en minutos o repeticiones.' },
+};
+
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
+let today         = new Date();
+let viewYear      = today.getFullYear();
+let viewMonth     = today.getMonth();
+let selectedDay   = today.getDate();
+let sliderOffset  = 0;
+let method        = 'clasico';
+let pendingCount  = 0;
+
+// gymData[YYYY-MM-DD] = { attended, method, exercises:{ exId: [{reps,kg},{...},...] } }
+let gymData = {};
+
+const db_ref = () => { /* se sobreescribe tras import */ };
+
+// ============================================================
+// FIREBASE
+// ============================================================
+let db;
+async function initFirebase() {
+  try {
+    const mod = await import('../../back_end/firebase.js');
+    db = mod.db;
+    const snap = await getDoc(doc(db, 'gym', 'registro'));
+    if (snap.exists()) gymData = snap.data();
+    setStatus('connected','conectado');
+  } catch(e) {
+    console.error(e);
+    setStatus('error','sin conexión');
+  }
+  renderAll();
+}
+
+function setStatus(cls, txt) {
+  document.getElementById('statusDot').className  = 'status-dot ' + cls;
+  document.getElementById('statusText').textContent = txt;
+}
+
+// ============================================================
+// UTILIDADES DE FECHA
+// ============================================================
+function dateKey(y,m,d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+function todayKey()     { return dateKey(today.getFullYear(), today.getMonth(), today.getDate()); }
+function selectedKey()  { return dateKey(viewYear, viewMonth, selectedDay); }
+function daysInMonth(y,m){ return new Date(y, m+1, 0).getDate(); }
+
+// ============================================================
+// CALENDARIO
+// ============================================================
+function renderCalendar() {
+  const label = document.getElementById('calMonthLabel');
+  label.textContent = `${MESES[viewMonth]} ${viewYear}`;
+
+  const slider = document.getElementById('daysSlider');
+  const totalDays = daysInMonth(viewYear, viewMonth);
+  const isThisMonth = viewYear === today.getFullYear() && viewMonth === today.getMonth();
+
+  slider.innerHTML = '';
+  for (let d = 1; d <= totalDays; d++) {
+    const key = dateKey(viewYear, viewMonth, d);
+    const isToday    = isThisMonth && d === today.getDate();
+    const isSel      = d === selectedDay;
+    const attended   = gymData[key]?.attended;
+
+    const pill = document.createElement('div');
+    pill.className = 'day-pill' +
+      (isToday ? ' today' : '') +
+      (isSel   ? ' selected' : '') +
+      (attended ? ' attended' : '') +
+      (!isToday && Math.abs(d - selectedDay) > 3 ? ' dimmed' : '');
+
+    const dateObj  = new Date(viewYear, viewMonth, d);
+    pill.innerHTML = `<span class="day-name">${DIAS_SEMANA[dateObj.getDay()]}</span><span class="day-num">${d}</span>`;
+    pill.onclick   = () => selectDay(d);
+    slider.appendChild(pill);
+  }
+
+  // Auto-scroll al día seleccionado
+  const pillW = 58;
+  const visible = Math.floor((document.querySelector('.days-slider-wrap').clientWidth - 50) / pillW);
+  sliderOffset  = Math.max(0, Math.min(selectedDay - Math.floor(visible/2) - 1, totalDays - visible));
+  slider.style.transform = `translateX(-${sliderOffset * pillW}px)`;
+
+  updateCalFooter();
+}
+
+function selectDay(d) {
+  selectedDay = d;
+  renderCalendar();
+  loadDayExercises();
+  updateCharts();
+}
+
+window.changeMonth = (dir) => {
+  viewMonth += dir;
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  if (viewMonth > 11){ viewMonth = 0;  viewYear++; }
+  selectedDay = (viewYear === today.getFullYear() && viewMonth === today.getMonth()) ? today.getDate() : 1;
+  renderCalendar();
+  loadDayExercises();
+};
+
+window.slideLeft = () => {
+  sliderOffset = Math.max(0, sliderOffset - 3);
+  document.getElementById('daysSlider').style.transform = `translateX(-${sliderOffset * 58}px)`;
+};
+window.slideRight = () => {
+  const total = daysInMonth(viewYear, viewMonth);
+  sliderOffset = Math.min(sliderOffset + 3, total - 1);
+  document.getElementById('daysSlider').style.transform = `translateX(-${sliderOffset * 58}px)`;
+};
+
+function updateCalFooter() {
+  const key = selectedKey();
+  const data = gymData[key] || {};
+  const dateObj = new Date(viewYear, viewMonth, selectedDay);
+  document.getElementById('selectedDateLabel').textContent =
+    `${DIAS_SEMANA[dateObj.getDay()]} ${selectedDay} de ${MESES[viewMonth]} ${viewYear}`;
+
+  const dot  = document.getElementById('attendDot');
+  const txt  = document.getElementById('attendText');
+  if (data.attended) {
+    dot.className = 'attend-dot yes';
+    txt.textContent = '✓ Asistencia registrada';
+  } else {
+    dot.className = 'attend-dot';
+    txt.textContent = 'Sin registro';
+  }
+}
+
+window.registrarAsistencia = (val) => {
+  const key = selectedKey();
+  if (!gymData[key]) gymData[key] = {};
+  gymData[key].attended = val;
+  pendingCount++;
+  updatePending();
+  renderCalendar();
+};
+
+// ============================================================
+// MÉTODO
+// ============================================================
+window.setMethod = (m) => {
+  method = m;
+  document.getElementById('btnClasico').className = 'method-btn' + (m === 'clasico' ? ' active' : '');
+  document.getElementById('btnBilbo').className   = 'method-btn' + (m === 'bilbo'   ? ' active' : '');
+  document.getElementById('methodDesc').innerHTML = METHODS[m].desc;
+  // Guardar método en el día
+  const key = selectedKey();
+  if (!gymData[key]) gymData[key] = {};
+  gymData[key].method = m;
+  pendingCount++;
+  updatePending();
+};
+
+// ============================================================
+// EJERCICIOS
+// ============================================================
+function renderMuscleGroups() {
+  const wrap = document.getElementById('muscleGroups');
+  wrap.innerHTML = '';
+
+  MUSCLE_GROUPS.forEach(group => {
+    const div = document.createElement('div');
+    div.className = 'muscle-group';
+
+    // Deduplicar ejercicios dentro del grupo
+    const seen = new Set();
+    const uniqueEx = group.exercises.filter(ex => {
+      if (seen.has(ex.id)) return false;
+      seen.add(ex.id); return true;
+    });
+
+    div.innerHTML = `
+      <button class="mg-trigger" onclick="toggleMG(this)">
+        <div class="mg-name">
+          <div class="mg-dot" style="background:${group.color}"></div>
+          ${group.name}
+        </div>
+        <span class="mg-arrow">▼</span>
+      </button>
+      <div class="mg-body">
+        <div class="exercise-list">
+          ${uniqueEx.map(ex => renderExerciseCard(ex, group)).join('')}
+        </div>
+      </div>`;
+    wrap.appendChild(div);
+  });
+}
+
+function renderExerciseCard(ex, group) {
+  const key   = selectedKey();
+  const saved = gymData[key]?.exercises?.[ex.id] || [];
+  const alsoTags = ex.also.map(a => `<span class="info-tag">${a.m} ~${a.pct}%</span>`).join('');
+  const isPrimary = true;
+
+  let seriesHTML = '';
+  for (let s = 0; s < 4; s++) {
+    const data   = saved[s] || {};
+    const filled = data.reps || data.kg;
+    seriesHTML += `
+      <div class="serie-dot ${filled ? 'filled' : ''}" id="dot-${ex.id}-${s}"
+           onclick="selectSerie('${ex.id}',${s})">${s+1}</div>`;
+  }
+
+  let inputsHTML = '';
+  for (let s = 0; s < 4; s++) {
+    const data = saved[s] || {};
+    inputsHTML += `
+      <div class="serie-inputs" id="inputs-${ex.id}-${s}" style="display:${s===0?'flex':'none'}">
+        <div class="serie-input-wrap">
+          <div class="serie-input-label">Reps</div>
+          <input class="serie-input" type="number" min="0" placeholder="—"
+                 value="${data.reps||''}"
+                 onchange="updateSerie('${ex.id}',${s},'reps',this.value)">
+        </div>
+        <div class="serie-input-wrap">
+          <div class="serie-input-label">Kg</div>
+          <input class="serie-input" type="number" min="0" step="0.5" placeholder="—"
+                 value="${data.kg||''}"
+                 onchange="updateSerie('${ex.id}',${s},'kg',this.value)">
+        </div>
+      </div>`;
+  }
+
+  return `
+    <div class="exercise-card" id="excard-${ex.id}">
+      <div class="ex-img">img</div>
+      <div class="ex-info">
+        <div class="ex-name-row">
+          <span class="ex-name">${ex.name}</span>
+          ${ex.also.length ? `<span class="ex-pct">+ otros grupos</span>` : ''}
+        </div>
+        ${alsoTags}
+        <div class="series-row" id="dots-${ex.id}">${seriesHTML}</div>
+        <div id="allInputs-${ex.id}">${inputsHTML}</div>
+      </div>
+    </div>`;
+}
+
+window.selectSerie = (exId, s) => {
+  // Marcar dot activo
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`dot-${exId}-${i}`);
+    if (dot) {
+      dot.className = 'serie-dot' + (dot.classList.contains('filled') ? ' filled' : '') + (i === s ? ' active' : '');
+    }
+    const inp = document.getElementById(`inputs-${exId}-${i}`);
+    if (inp) inp.style.display = i === s ? 'flex' : 'none';
+  }
+};
+
+window.updateSerie = (exId, s, field, value) => {
+  const key = selectedKey();
+  if (!gymData[key]) gymData[key] = {};
+  if (!gymData[key].exercises) gymData[key].exercises = {};
+  if (!gymData[key].exercises[exId]) gymData[key].exercises[exId] = [];
+  while (gymData[key].exercises[exId].length <= s) gymData[key].exercises[exId].push({});
+  gymData[key].exercises[exId][s][field] = parseFloat(value) || 0;
+
+  // Marcar dot como filled
+  const dot = document.getElementById(`dot-${exId}-${s}`);
+  if (dot && value) dot.classList.add('filled');
+
+  pendingCount++;
+  updatePending();
+  updateBodyMap();
+  updateCharts();
+};
+
+function loadDayExercises() {
+  const key = selectedKey();
+  const data = gymData[key] || {};
+  if (data.method) {
+    method = data.method;
+    document.getElementById('btnClasico').className = 'method-btn' + (method==='clasico'?' active':'');
+    document.getElementById('btnBilbo').className   = 'method-btn' + (method==='bilbo'?' active':'');
+    document.getElementById('methodDesc').innerHTML = METHODS[method].desc;
+  }
+  renderMuscleGroups();
+  updateBodyMap();
+  updateCharts();
+}
+
+// ============================================================
+// TOGGLE ACORDEÓN
+// ============================================================
+window.toggleAcc = (btn) => {
+  btn.classList.toggle('open');
+  const body = btn.nextElementSibling;
+  body.classList.toggle('open');
+};
+
+window.toggleMG = (btn) => {
+  btn.classList.toggle('open');
+  const body = btn.nextElementSibling;
+  body.style.maxHeight = body.style.maxHeight ? '' : '9999px';
+};
+
+// ============================================================
+// MAPA MUSCULAR
+// ============================================================
+function getMuscleStimulus() {
+  // Calcula estímulo acumulado por músculo basado en series completadas
+  const key = selectedKey();
+  const exercises = gymData[key]?.exercises || {};
+  const stimulus = {};
+
+  // Para cada ejercicio registrado
+  for (const [exId, series] of Object.entries(exercises)) {
+    const completedSeries = series.filter(s => s && (s.reps || s.kg)).length;
+    if (!completedSeries) continue;
+
+    // Buscar el ejercicio en los grupos
+    let exData = null;
+    for (const group of MUSCLE_GROUPS) {
+      exData = group.exercises.find(e => e.id === exId);
+      if (exData) break;
+    }
+    if (!exData) continue;
+
+    const intensity = Math.min(completedSeries, 4); // 1-4
+
+    // Músculo principal — 100%
+    stimulus[exData.primary] = (stimulus[exData.primary] || 0) + intensity;
+
+    // Músculos secundarios
+    for (const a of exData.also) {
+      const contrib = intensity * (a.pct / 100);
+      stimulus[a.m] = (stimulus[a.m] || 0) + contrib;
+    }
+  }
+  return stimulus;
+}
+
+function updateBodyMap() {
+  const stim = getMuscleStimulus();
+  const maxVal = Math.max(...Object.values(stim), 1);
+
+  // Reset todos los músculos
+  document.querySelectorAll('.muscle').forEach(el => {
+    el.className = 'muscle';
+  });
+
+  // Aplicar niveles
+  for (const [muscle, val] of Object.entries(stim)) {
+    const pct = val / maxVal;
+    const level = pct < 0.25 ? 1 : pct < 0.5 ? 2 : pct < 0.75 ? 3 : 4;
+    const ids = [...(MUSCLE_MAP[muscle]?.front||[]), ...(MUSCLE_MAP[muscle]?.back||[])];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.className = `muscle level-${level}`;
+    });
+  }
+}
+
+// ============================================================
+// GRÁFICOS
+// ============================================================
+function updateCharts() {
+  const key = selectedKey();
+  const exercises = gymData[key]?.exercises || {};
+  const chartEl   = document.getElementById('chartSection');
+
+  // Construir datos: volumen por ejercicio (reps * kg)
+  const items = [];
+  for (const [exId, series] of Object.entries(exercises)) {
+    const volumen = series.reduce((s, ser) => s + ((ser.reps||0) * (ser.kg||0)), 0);
+    const totalReps = series.reduce((s, ser) => s + (ser.reps||0), 0);
+    if (volumen === 0 && totalReps === 0) continue;
+    let exName = exId.replace(/_/g,' ');
+    for (const g of MUSCLE_GROUPS) {
+      const found = g.exercises.find(e => e.id === exId);
+      if (found) { exName = found.name; break; }
+    }
+    items.push({ name: exName, volumen, reps: totalReps });
+  }
+
+  if (!items.length) {
+    chartEl.innerHTML = '<p style="font-size:12px;color:var(--txt3);text-align:center;padding:1rem">Registra ejercicios para ver los gráficos</p>';
+    return;
+  }
+
+  items.sort((a,b) => b.volumen - a.volumen);
+  const maxVol = Math.max(...items.map(i => i.volumen), 1);
+
+  chartEl.innerHTML = `
+    <div class="chart-title">// volumen por ejercicio (reps × kg)</div>
+    <div class="bar-list">
+      ${items.map(it => `
+        <div class="bar-row">
+          <div class="bar-label-row">
+            <span class="bar-name">${it.name}</span>
+            <span class="bar-val">${it.volumen.toLocaleString()} kg·rep</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(it.volumen/maxVol*100)}%"></div></div>
+        </div>`).join('')}
+    </div>
+    <div class="chart-title" style="margin-top:1.2rem">// repeticiones totales por ejercicio</div>
+    <div class="bar-list">
+      ${items.map(it => `
+        <div class="bar-row">
+          <div class="bar-label-row">
+            <span class="bar-name">${it.name}</span>
+            <span class="bar-val">${it.reps} reps</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(it.reps/Math.max(...items.map(i=>i.reps),1)*100)}%;background:#f59e0b"></div></div>
+        </div>`).join('')}
+    </div>`;
+
+  updateHistorico();
+}
+
+// ============================================================
+// HISTÓRICO
+// ============================================================
+function updateHistorico() {
+  const histStats = document.getElementById('histStats');
+  const histChart = document.getElementById('histChart');
+
+  const allKeys = Object.keys(gymData).sort();
+  const diasEntrenados = allKeys.filter(k => gymData[k]?.attended).length;
+
+  // Calcular volumen histórico por ejercicio
+  const volPorEjercicio = {};
+  const diasPorGrupo = {};
+
+  for (const key of allKeys) {
+    const day = gymData[key];
+    if (!day?.exercises) continue;
+    for (const [exId, series] of Object.entries(day.exercises)) {
+      const vol = series.reduce((s,ser)=>s+((ser.reps||0)*(ser.kg||0)),0);
+      if (!volPorEjercicio[exId]) volPorEjercicio[exId] = [];
+      volPorEjercicio[exId].push({ date:key, vol });
+    }
+  }
+
+  // Stats generales
+  const totalSesiones = diasEntrenados;
+  const semanaActual  = allKeys.filter(k => {
+    const d = new Date(k);
+    const diff = (today - d) / (1000*60*60*24);
+    return diff <= 7 && gymData[k]?.attended;
+  }).length;
+
+  histStats.innerHTML = `
+    <div class="hist-stat"><div class="hist-stat-val">${totalSesiones}</div><div class="hist-stat-lbl">Sesiones totales</div></div>
+    <div class="hist-stat"><div class="hist-stat-val">${semanaActual}</div><div class="hist-stat-lbl">Esta semana</div></div>
+    <div class="hist-stat"><div class="hist-stat-val">${Object.keys(volPorEjercicio).length}</div><div class="hist-stat-lbl">Ejercicios registrados</div></div>`;
+
+  // Progreso por ejercicio (comparar último vs primero)
+  const progItems = [];
+  for (const [exId, sessions] of Object.entries(volPorEjercicio)) {
+    if (sessions.length < 2) continue;
+    const first = sessions[0].vol;
+    const last  = sessions[sessions.length-1].vol;
+    const pct   = first > 0 ? Math.round(((last-first)/first)*100) : 0;
+    let name = exId.replace(/_/g,' ');
+    for (const g of MUSCLE_GROUPS) {
+      const f = g.exercises.find(e=>e.id===exId);
+      if (f) { name=f.name; break; }
+    }
+    progItems.push({ name, pct, last });
+  }
+
+  if (!progItems.length) {
+    histChart.innerHTML = '<p class="hist-empty">Necesitas al menos 2 sesiones por ejercicio para ver el progreso</p>';
+    return;
+  }
+
+  progItems.sort((a,b) => b.pct - a.pct);
+  histChart.innerHTML = `
+    <div class="chart-title" style="margin-bottom:0.8rem">// progreso de volumen por ejercicio</div>
+    ${progItems.map(it => `
+      <div class="bar-row" style="margin-bottom:8px">
+        <div class="bar-label-row">
+          <span class="bar-name">${it.name}</span>
+          <span class="hist-trend ${it.pct>0?'up':it.pct<0?'down':'neutral'}">${it.pct>0?'+':''}${it.pct}%</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width:${Math.min(Math.abs(it.pct),100)}%;background:${it.pct>=0?'#22c55e':'#ef4444'}"></div>
+        </div>
+      </div>`).join('')}`;
+}
+
+// ============================================================
+// INFO
+// ============================================================
+function renderInfo() {
+  const list = document.getElementById('infoList');
+  const seen = new Set();
+  let html = '';
+
+  for (const group of MUSCLE_GROUPS) {
+    for (const ex of group.exercises) {
+      if (seen.has(ex.id)) continue;
+      seen.add(ex.id);
+      const info = EXERCISE_INFO[ex.id] || { desc:'Información próximamente.' };
+      const alsoTags = ex.also.map(a=>`<span class="info-tag">${a.m}: ~${a.pct}%</span>`).join('');
+      html += `
+        <div class="info-card">
+          <div class="info-card-name">${ex.name}</div>
+          <div class="info-card-desc">${info.desc}</div>
+          <div style="margin-top:0.4rem">
+            <span class="info-tag" style="border-color:#22c55e;color:#22c55e">${ex.primary} — principal</span>
+            ${alsoTags}
+          </div>
+        </div>`;
+    }
+  }
+  list.innerHTML = html;
+}
+
+// ============================================================
+// GUARDAR
+// ============================================================
+function updatePending() {
+  document.getElementById('pendingCount').textContent = pendingCount;
+  document.getElementById('btnSaveGym').disabled = pendingCount === 0;
+}
+
+window.guardarTodo = async () => {
+  const btn = document.getElementById('btnSaveGym');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  try {
+    await setDoc(doc(db, 'gym', 'registro'), gymData);
+    pendingCount = 0;
+    updatePending();
+    btn.textContent = '✓ Guardado';
+    setTimeout(() => { btn.textContent = 'Guardar sesión'; }, 2000);
+  } catch(e) {
+    console.error(e);
+    btn.textContent = 'Error — reintentar';
+    btn.disabled = false;
+  }
+};
+
+// ============================================================
+// RENDER GENERAL
+// ============================================================
+function renderAll() {
+  renderCalendar();
+  renderMuscleGroups();
+  renderInfo();
+  updateBodyMap();
+  updateCharts();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+initFirebase();
+</script>
 </body>
 </html>
